@@ -1,0 +1,64 @@
+body {
+  margin: 0;
+  font-family: monospace;
+  background: black;
+  color: #00ff88;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#terminal {
+  width: 100%;
+  max-width: 900px;
+  height: 100vh;
+  padding: 1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow-y: auto;
+  position: relative;
+}
+
+#header {
+  font-size: 1.4rem;
+  color: #00ffff;
+  margin-bottom: 1rem;
+}
+
+#output {
+  flex-grow: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+#input-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+#terminal-input {
+  background: transparent;
+  border: none;
+  color: #00ff88;
+  font-size: 1rem;
+  flex-grow: 1;
+  outline: none;
+}
+
+#credits {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.65rem;
+  color: #00ffaa88;
+  background: #00000099;
+  z-index: 100;
+}
