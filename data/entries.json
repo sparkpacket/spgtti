@@ -1,0 +1,14 @@
+{
+  "dns": {
+    "desc": "DNS stands for Domain Name System. It translates domain names like google.com into IP addresses.",
+    "links": ["https://en.wikipedia.org/wiki/Domain_Name_System"]
+  },
+  "arpanet": {
+    "desc": "ARPANET was the first wide-area packet-switched network and the precursor to the modern Internet.",
+    "links": ["https://en.wikipedia.org/wiki/ARPANET"]
+  },
+  "html": {
+    "desc": "HTML stands for HyperText Markup Language. It structures content on the web.",
+    "links": ["https://developer.mozilla.org/en-US/docs/Web/HTML"]
+  }
+}
