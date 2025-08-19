@@ -1,174 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sparkpacket’s Guide to the INTERNET!</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: monospace;
-      background: black;
-      color: #00ff88;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    #terminal {
-      width: 100%;
-      max-width: 900px;
-      height: 100vh;
-      padding: 1rem;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      overflow-y: auto;
-      position: relative;
-    }
-
-    #header {
-      font-size: 1.4rem;
-      color: #00ffff;
-      margin-bottom: 1rem;
-      text-shadow: 0 0 6px #00ffff;
-    }
-
-    #output {
-      flex-grow: 1;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      line-height: 1.4;
-    }
-
-    #output-entry {
-      margin-bottom: 1rem;
-      padding: 0.5rem;
-      border-left: 2px solid #00ffaa66;
-    }
-
-    #input-line {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 1rem;
-    }
-
-    #terminal-input {
-      background: transparent;
-      border: none;
-      color: #00ff88;
-      font-size: 1rem;
-      flex-grow: 1;
-      outline: none;
-    }
-
-    #credits {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      padding: 0.3rem 0.6rem;
-      font-size: 0.65rem;
-      color: #00ffaa88;
-      background: #00000099;
-      z-index: 100;
-    }
-
-    a {
-      color: #00ffff;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sparkpacket’s Guide to the INTERNET!</title>
+<style>
+body {
+  margin: 0;
+  font-family: monospace;
+  background: black;
+  color: #00ff88;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+}
+#terminal {
+  width: 100%;
+  max-width: 900px;
+  height: 100vh;
+  padding: 1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow-y: auto;
+  position: relative;
+}
+#header {
+  font-size: 1.4rem;
+  color: #00ffff;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 6px #00ffff;
+}
+#output {
+  flex-grow: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+.output-entry {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-left: 2px solid #00ffaa66;
+}
+#input-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+#terminal-input {
+  background: transparent;
+  border: none;
+  color: #00ff88;
+  font-size: 1rem;
+  flex-grow: 1;
+  outline: none;
+}
+#credits {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.65rem;
+  color: #00ffaa88;
+  background: #00000099;
+  z-index: 100;
+}
+a {
+  color: #00ffff;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+</style>
 </head>
 <body>
-  <div id="terminal">
-    <div id="header">Sparkpacket's Guide to the INTERNET!</div>
-    <div id="output"></div>
-    <div id="input-line">
-      <span>$</span>
-      <input type="text" id="terminal-input" placeholder="Type a term, or 'help' for commands..." autofocus />
-    </div>
-    <div id="credits">
-      <small>
-        Based off of The Hacker’s Dictionary (1975), The Hitchhiker’s Guide to the Galaxy (1979), and many other sources.<br/>
-        Started by SPARKPACKET, using AI. Now being helped by: <span id="contributors">Fredoka,</span>
-      </small>
-    </div>
+<div id="terminal">
+  <div id="header">Sparkpacket's Guide to the INTERNET!</div>
+  <div id="output"></div>
+  <div id="input-line">
+    <span>$</span>
+    <input type="text" id="terminal-input" placeholder="Type a term, or 'help' for commands..." autofocus />
   </div>
+  <div id="credits">
+    <small>
+      Based off of The Hacker’s Dictionary (1975), The Hitchhiker’s Guide to the Galaxy (1979), and many other sources.<br/>
+      Started by SPARKPACKET, using AI. Now being helped by: <span id="contributors">Fredoka,</span>
+    </small>
+  </div>
+</div>
 
-  <script>
-    const input = document.getElementById('terminal-input');
-    const output = document.getElementById('output');
+<script>
+const input = document.getElementById('terminal-input');
+const output = document.getElementById('output');
 
-    let dictionary = {};
+let dictionary = {};
+let browserMode = "automatic"; // default
+let commandHistory = [];
+let historyIndex = -1;
 
-    // Load dictionary entries from external JSON
-    fetch('data/entries.json')
-      .then(res => res.json())
-      .then(data => dictionary = data)
-      .catch(err => log(`Error loading dictionary: ${err}`, true));
+// Load handmade entries
+fetch('data/entries.json')
+  .then(res => res.json())
+  .then(data => dictionary = data)
+  .catch(err => log(`Error loading dictionary: ${err}`, true));
 
-    // Utility logging
-    function log(text, error=false) {
-      const entry = document.createElement('div');
-      entry.id = "output-entry";
-      entry.style.color = error ? "#ff5555" : "#00ff88";
-      entry.innerHTML = text;
-      output.appendChild(entry);
-      output.scrollTop = output.scrollHeight;
+// Logging utility
+function log(text, error=false) {
+  const entry = document.createElement('div');
+  entry.className = "output-entry";
+  entry.style.color = error ? "#ff5555" : "#00ff88";
+  entry.innerHTML = text;
+  output.appendChild(entry);
+  output.scrollTop = output.scrollHeight;
+}
+
+// Input handling
+input.addEventListener('keydown', e => {
+  if(e.key === 'Enter') {
+    const query = input.value.trim().toLowerCase();
+    if(!query) return;
+    commandHistory.push(query);
+    historyIndex = commandHistory.length;
+    input.value = '';
+    handleQuery(query);
+  }
+  // Arrow up/down for command history
+  if(e.key === 'ArrowUp') {
+    if(historyIndex > 0) {
+      historyIndex--;
+      input.value = commandHistory[historyIndex];
     }
+  }
+  if(e.key === 'ArrowDown') {
+    if(historyIndex < commandHistory.length - 1) {
+      historyIndex++;
+      input.value = commandHistory[historyIndex];
+    } else {
+      historyIndex = commandHistory.length;
+      input.value = '';
+    }
+  }
+});
 
-    // Handle input
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const query = input.value.trim().toLowerCase();
-        input.value = '';
-        handleQuery(query);
-      }
-    });
-
-    function handleQuery(query) {
-      if (!query) return;
-
-      // Built-in commands
-      if (query === "help") {
-        log(`Commands:
+// Handle queries
+function handleQuery(query) {
+  // Built-in commands
+  if(query === "help") {
+    log(`Commands:
 - help : Show this help
-- list : List all available entries
+- list : List all available handmade entries
 - clear : Clear the screen
-- [term] : Search for a term (e.g. 'dns')`);
-        return;
-      }
-      if (query === "clear") {
-        output.innerHTML = "";
-        return;
-      }
-      if (query === "list") {
-        log("Available entries:\n" + Object.keys(dictionary).map(k => "- " + k).join("\n"));
-        return;
-      }
+- browsertype : Toggle browser mode (automatic/handmade)
+- history : Show previous commands
+- tags [tag] : List entries by tag (handmade only)
+- random : Show a random entry
+- [term] : Search for a term`);
+    return;
+  }
 
-      // Lookup entry
-      const entry = dictionary[query];
-      if (entry) {
-        log(`<strong>> ${query.toUpperCase()}</strong><br/>${entry.desc}<br/><br/>` + 
-            (entry.links?.map(l => `🔗 <a href="${l}" target="_blank">${l}</a>`).join('<br/>') || ''));
-      } else {
-        // Try fuzzy search
-        const suggestions = Object.keys(dictionary).filter(k => k.includes(query)).slice(0,5);
-        if (suggestions.length > 0) {
-          log(`> ${query} not found. Did you mean:\n${suggestions.join(", ")} ?`);
-        } else {
-          log(`> ${query} not found. Try another term.`, true);
-        }
-      }
+  if(query === "clear") { output.innerHTML=""; return; }
+
+  if(query === "browsertype") {
+    browserMode = browserMode === "automatic" ? "handmade" : "automatic";
+    log(`Browser type toggled. Current mode: ${browserMode.toUpperCase()}`);
+    return;
+  }
+
+  if(query === "list") {
+    if(browserMode==="handmade") {
+      log("Handmade entries:\n"+Object.keys(dictionary).map(k=>"- "+k).join("\n"));
+    } else {
+      log("> List unavailable in automatic mode. Try a search instead.");
     }
-  </script>
+    return;
+  }
+
+  if(query === "history") {
+    if(commandHistory.length===0) log("> No previous commands.");
+    else log("> History:\n" + commandHistory.join("\n"));
+    return;
+  }
+
+  if(query.startsWith("tags ")) {
+    const tagQuery = query.split(" ")[1];
+    if(browserMode==="handmade") {
+      const tagged = Object.keys(dictionary).filter(k => dictionary[k].tags?.includes(tagQuery));
+      if(tagged.length>0) log(`Entries with tag "${tagQuery}":\n`+tagged.join(", "));
+      else log(`No entries found with tag "${tagQuery}".`);
+    } else {
+      log("> Tags search only available in handmade mode.");
+    }
+    return;
+  }
+
+  if(query === "random") {
+    if(browserMode==="handmade") {
+      const keys = Object.keys(dictionary);
+      const randKey = keys[Math.floor(Math.random()*keys.length)];
+      showEntry(randKey, dictionary[randKey]);
+    } else {
+      log("> Random entry only available in handmade mode.");
+    }
+    return;
+  }
+
+  // Search term
+  if(browserMode==="handmade") {
+    const entry = dictionary[query];
+    if(entry) showEntry(query, entry);
+    else {
+      const suggestions = Object.keys(dictionary).filter(k=>k.includes(query)).slice(0,5);
+      if(suggestions.length>0) log(`> ${query} not found. Did you mean:\n${suggestions.join(", ")} ?`);
+      else log(`> ${query} not found.`, true);
+    }
+  } else { fetchAutomatic(query); }
+}
+
+// Show a single entry
+function showEntry(key, entry) {
+  log(`<strong>> ${key.toUpperCase()}</strong><br/>${entry.desc}<br/><br>`+
+      (entry.links?.map(l=>`🔗 <a href="${l}" target="_blank">${l}</a>`).join("<br>") || ""));
+}
+
+// Automatic multi-source fetching (Wikipedia + DuckDuckGo)
+async function fetchAutomatic(query) {
+  log(`Searching for "${query}" from multiple sources...`);
+  try {
+    // Wikipedia
+    const wikiRes = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+    const wikiData = await wikiRes.json();
+    const wikiText = wikiData.extract || "No Wikipedia summary found.";
+    const wikiLink = wikiData.content_urls?.desktop?.page || "";
+    log(`<strong>> ${query.toUpperCase()} (Automatic)</strong><br>${wikiText}<br>`+
+        (wikiLink?`🔗 <a href="${wikiLink}" target="_blank">${wikiLink}</a>`:""));
+    
+    // DuckDuckGo Instant Answer (JSONP fallback if CORS)
+    const ddgRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`);
+    const ddgData = await ddgRes.json();
+    if(ddgData.AbstractText) log(`DuckDuckGo summary:\n${ddgData.AbstractText}<br>🔗 <a href="${ddgData.AbstractURL}" target="_blank">${ddgData.AbstractURL}</a>`);
+    
+  } catch(err) {
+    log(`Error fetching automatic info: ${err}`, true);
+  }
+}
+</script>
 </body>
 </html>
