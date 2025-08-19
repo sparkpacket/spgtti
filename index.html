@@ -101,10 +101,7 @@ body {
   background: #00000099;
   z-index: 100;
 }
-a {
-  color: #00ffff;
-  text-decoration: none;
-}
+a { color: #00ffff; text-decoration: none; }
 a:hover { text-decoration: underline; }
 </style>
 </head>
@@ -139,37 +136,33 @@ fetch('data/entries.json')
   .then(data => dictionary = data)
   .catch(err => log(`Error loading dictionary: ${err}`, true));
 
-// Log function
-function log(html, error=false) {
-  const entry = document.createElement('div');
-  entry.className = "output-entry";
-  entry.style.color = error ? "#ff5555" : "#00ff88";
-  entry.innerHTML = html;
+// Logging
+function log(html,error=false){
+  const entry=document.createElement('div');
+  entry.className="output-entry";
+  entry.style.color=error?"#ff5555":"#00ff88";
+  entry.innerHTML=html;
   output.appendChild(entry);
-  output.scrollTop = output.scrollHeight;
+  output.scrollTop=output.scrollHeight;
 }
 
-// Input handling
-input.addEventListener('keydown', e => {
+// Command handling
+input.addEventListener('keydown',e=>{
   if(e.key==='Enter'){
-    const query = input.value.trim().toLowerCase();
+    const query=input.value.trim().toLowerCase();
     if(!query) return;
     commandHistory.push(query);
-    historyIndex = commandHistory.length;
+    historyIndex=commandHistory.length;
     input.value='';
     handleQuery(query);
   }
   if(e.key==='ArrowUp'){ if(historyIndex>0){historyIndex--;input.value=commandHistory[historyIndex];}}
-  if(e.key==='ArrowDown'){ 
-    if(historyIndex<commandHistory.length-1){historyIndex++;input.value=commandHistory[historyIndex];} 
-    else {historyIndex=commandHistory.length; input.value='';}
-  }
+  if(e.key==='ArrowDown'){ if(historyIndex<commandHistory.length-1){historyIndex++;input.value=commandHistory[historyIndex];} else {historyIndex=commandHistory.length; input.value='';}}
 });
 
-// Handle queries
+// Built-in commands
 function handleQuery(query){
-  if(query==="help"){
-    log(`Commands:
+  if(query==="help"){ log(`Commands:
 - help : Show this help
 - list : List handmade entries
 - clear : Clear terminal
@@ -178,91 +171,78 @@ function handleQuery(query){
 - tags [tag] : Search by tag
 - random : Random entry
 - timeline [year] : Show timeline
-- [term] : Search term`);
-    return;
-  }
+- [term] : Search term`); return; }
   if(query==="clear"){ output.innerHTML=""; return; }
-  if(query==="browsertype"){ browserMode = browserMode==="automatic"?"handmade":"automatic"; log(`Browser type toggled. Current mode: ${browserMode.toUpperCase()}`); return;}
-  if(query==="list"){ 
-    if(browserMode==="handmade"){ log("Handmade entries:\n"+Object.keys(dictionary).map(k=>"- "+k).join("\n")); } 
-    else{ log("> List unavailable in automatic mode."); } 
-    return;
-  }
-  if(query==="history"){ 
-    if(commandHistory.length===0) log("> No previous commands.");
-    else log("> History:\n"+commandHistory.join("\n")); 
-    return;
-  }
+  if(query==="browsertype"){ browserMode=browserMode==="automatic"?"handmade":"automatic"; log(`Browser type toggled. Current mode: ${browserMode.toUpperCase()}`); return;}
+  if(query==="list"){ if(browserMode==="handmade"){ log("Handmade entries:\n"+Object.keys(dictionary).map(k=>"- "+k).join("\n")); } else{ log("> List unavailable in automatic mode."); } return;}
+  if(query==="history"){ if(commandHistory.length===0) log("> No previous commands."); else log("> History:\n"+commandHistory.join("\n")); return;}
   if(query.startsWith("tags ")){
-    const tagQ = query.split(" ")[1];
+    const tagQ=query.split(" ")[1];
     if(browserMode==="handmade"){
-      const tagged = Object.keys(dictionary).filter(k=>dictionary[k].tags?.includes(tagQ));
-      if(tagged.length>0) log(`Entries with tag "${tagQ}":\n`+tagged.join(", "));
-      else log(`No entries found with tag "${tagQ}".`);
-    } else { log("> Tags only in handmade mode."); }
-    return;
+      const tagged=Object.keys(dictionary).filter(k=>dictionary[k].tags?.includes(tagQ));
+      if(tagged.length>0) log(`Entries with tag "${tagQ}":\n`+tagged.join(", ")); else log(`No entries found with tag "${tagQ}".`);
+    } else log("> Tags only in handmade mode."); return;
   }
   if(query==="random"){
-    if(browserMode==="handmade"){
-      const keys = Object.keys(dictionary);
-      const randKey = keys[Math.floor(Math.random()*keys.length)];
-      showEntry(randKey,dictionary[randKey]);
-    } else { log("> Random only in handmade mode."); }
-    return;
+    if(browserMode==="handmade"){ const keys=Object.keys(dictionary); const randKey=keys[Math.floor(Math.random()*keys.length)]; showEntry(randKey,dictionary[randKey]); } else log("> Random only in handmade mode."); return;
   }
   if(query.startsWith("timeline")){
     if(browserMode==="handmade"){
-      const yearQuery = query.split(" ")[1];
-      const sorted = Object.entries(dictionary)
-        .filter(([k,v])=>!yearQuery || v.year==yearQuery)
-        .sort((a,b)=> (a[1].year||0)-(b[1].year||0));
+      const yearQuery=query.split(" ")[1];
+      const sorted=Object.entries(dictionary).filter(([k,v])=>!yearQuery||v.year==yearQuery).sort((a,b)=>(a[1].year||0)-(b[1].year||0));
       if(sorted.length===0) log("> No entries found for that year/tag.");
-      else {
-        log("Timeline view:");
-        sorted.forEach(([k,v])=>showEntry(k,v,true));
-      }
-    } else { log("> Timeline only in handmade mode."); }
-    return;
+      else { log("Timeline view:"); sorted.forEach(([k,v])=>showEntry(k,v,true)); }
+    } else log("> Timeline only in handmade mode."); return;
   }
-
-  // Search term
   if(browserMode==="handmade"){
     const entry=dictionary[query];
     if(entry) showEntry(query,entry);
-    else{
-      const suggestions = Object.keys(dictionary).filter(k=>k.includes(query)).slice(0,5);
-      if(suggestions.length>0) log(`> ${query} not found. Did you mean:\n${suggestions.join(", ")} ?`);
-      else log(`> ${query} not found.`,true);
-    }
-  } else { fetchAutomatic(query); }
+    else{ const suggestions=Object.keys(dictionary).filter(k=>k.includes(query)).slice(0,5); if(suggestions.length>0) log(`> ${query} not found. Did you mean:\n${suggestions.join(", ")} ?`); else log(`> ${query} not found.`,true);}
+  } else fetchAutomatic(query);
 }
 
 // Display single entry
 function showEntry(key,entry,inline=false){
-  const html = `<div class="entry-header">${key.toUpperCase()} ${entry.year?'<span class="entry-year">('+entry.year+')</span>':''}</div>
+  const html=`<div class="entry-header">${key.toUpperCase()} ${entry.year?'<span class="entry-year">('+entry.year+')</span>':''}</div>
   <div class="entry-desc">${entry.desc}</div>
   ${entry.tags?'<div class="entry-tags">Tags: '+entry.tags.join(", ")+'</div>':''}
   ${entry.links?'<div class="entry-links">'+entry.links.map(l=>`🔗 <a href="${l}" target="_blank">${l}</a>`).join("<br>")+'</div>':''}`;
-  if(inline) log(html); else log(html);
+  log(html);
 }
 
-// Automatic multi-source fetching
+// 20+ API scaffold
+const apis=[
+  {name:"Wikipedia",fetcher:async(q)=>{ const r=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`); const d=await r.json(); return {text:d.extract||"No summary",link:d.content_urls?.desktop?.page||""}; }},
+  {name:"DuckDuckGo",fetcher:async(q)=>{ const r=await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`); const d=await r.json(); return {text:d.AbstractText||"No summary",link:d.AbstractURL||""}; }},
+  {name:"MDN",fetcher:async(q)=>{ return {text:"MDN summary placeholder",link:"https://developer.mozilla.org/en-US/search?q="+encodeURIComponent(q)}; }},
+  {name:"Archive.org",fetcher:async(q)=>{ return {text:"Archive.org placeholder",link:"https://archive.org/search.php?query="+encodeURIComponent(q)}; }},
+  {name:"StackOverflow",fetcher:async(q)=>{ return {text:"StackOverflow placeholder",link:"https://stackoverflow.com/search?q="+encodeURIComponent(q)}; }},
+  {name:"GitHub Repos",fetcher:async(q)=>{ return {text:"GitHub placeholder",link:"https://github.com/search?q="+encodeURIComponent(q)}; }},
+  {name:"Reddit",fetcher:async(q)=>{ return {text:"Reddit placeholder",link:"https://www.reddit.com/search/?q="+encodeURIComponent(q)}; }},
+  {name:"Wiktionary",fetcher:async(q)=>{ return {text:"Wiktionary placeholder",link:"https://en.wiktionary.org/wiki/"+encodeURIComponent(q)}; }},
+  {name:"YouTube",fetcher:async(q)=>{ return {text:"YouTube placeholder",link:"https://www.youtube.com/results?search_query="+encodeURIComponent(q)}; }},
+  {name:"News",fetcher:async(q)=>{ return {text:"News placeholder",link:"https://news.google.com/search?q="+encodeURIComponent(q)}; }},
+  {name:"Quora",fetcher:async(q)=>{ return {text:"Quora placeholder",link:"https://www.quora.com/search?q="+encodeURIComponent(q)}; }},
+  {name:"OpenAI Summary",fetcher:async(q)=>{ return {text:"AI summary placeholder",link:"#"}; }},
+  {name:"TechCrunch",fetcher:async(q)=>{ return {text:"TechCrunch placeholder",link:"https://techcrunch.com/search/"+encodeURIComponent(q)}; }},
+  {name:"HackerNews",fetcher:async(q)=>{ return {text:"HackerNews placeholder",link:"https://news.ycombinator.com/"}; }},
+  {name:"Wikipedia Images",fetcher:async(q)=>{ return {text:"Image summary placeholder",link:"https://en.wikipedia.org/wiki/"+encodeURIComponent(q)}; }},
+  {name:"Reddit Comments",fetcher:async(q)=>{ return {text:"Reddit comments placeholder",link:"https://www.reddit.com/search/?q="+encodeURIComponent(q)}; }},
+  {name:"GitHub Issues",fetcher:async(q)=>{ return {text:"GitHub issues placeholder",link:"https://github.com/search?q="+encodeURIComponent(q)+"&type=issues"}; }},
+  {name:"Google Books",fetcher:async(q)=>{ return {text:"Google Books placeholder",link:"https://www.google.com/search?tbm=bks&q="+encodeURIComponent(q)}; }},
+  {name:"StackExchange",fetcher:async(q)=>{ return {text:"StackExchange placeholder",link:"https://stackexchange.com/search?q="+encodeURIComponent(q)}; }},
+  {name:"Internet Archive Text",fetcher:async(q)=>{ return {text:"Internet Archive Text placeholder",link:"https://archive.org/search.php?query="+encodeURIComponent(q)}; }}
+];
+
+// Multi-API fetch
 async function fetchAutomatic(query){
-  log(`Searching for "${query}" from multiple sources...`);
-  try{
-    const wiki = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`).then(r=>r.json());
-    const wikiText = wiki.extract||"No Wikipedia summary.";
-    const wikiLink = wiki.content_urls?.desktop?.page||"";
-    log(`<div class="collapsible">Wikipedia</div><div class="content">${wikiText}<br>${wikiLink?`🔗 <a href="${wikiLink}" target="_blank">${wikiLink}</a>`:""}</div>`);
-
-    const ddg = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`).then(r=>r.json());
-    if(ddg.AbstractText) log(`<div class="collapsible">DuckDuckGo</div><div class="content">${ddg.AbstractText}<br>🔗 <a href="${ddg.AbstractURL}" target="_blank">${ddg.AbstractURL}</a></div>`);
-
-    // Make collapsible work
-    document.querySelectorAll(".collapsible").forEach(c=>{
-      c.onclick = ()=>{ const content=c.nextElementSibling; content.style.display=content.style.display==="block"?"none":"block";}
-    });
-  } catch(err){ log(`Error fetching automatic info: ${err}`,true);}
+  log(`Searching "${query}" across multiple sources...`);
+  const results=await Promise.all(apis.map(api=>api.fetcher(query).catch(e=>({text:"Error",link:""}))));
+  results.forEach((res,i)=>{
+    const html=`<div class="collapsible">${apis[i].name}</div><div class="content">${res.text}<br>${res.link?`🔗 <a href="${res.link}" target="_blank">${res.link}</a>`:""}</div>`;
+    log(html);
+  });
+  document.querySelectorAll(".collapsible").forEach(c=>{c.onclick=()=>{const content=c.nextElementSibling;content.style.display=content.style.display==="block"?"none":"block";}});
 }
 </script>
 </body>
